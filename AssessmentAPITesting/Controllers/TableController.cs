@@ -31,7 +31,7 @@ namespace AssessmentAPITesting.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.ToString());
+                return BadRequest(ex.Message);
             }
             
         }
@@ -55,7 +55,7 @@ namespace AssessmentAPITesting.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.ToString());
+                return BadRequest(ex.Message);
             }
         }
         //Edit record
@@ -77,7 +77,7 @@ namespace AssessmentAPITesting.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.ToString());
+                return BadRequest(ex.Message);
             }
         }
 

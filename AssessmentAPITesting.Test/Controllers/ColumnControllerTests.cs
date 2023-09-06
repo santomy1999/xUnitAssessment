@@ -5,6 +5,7 @@ using FluentAssertions;
 using AutoFixture;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Microsoft.AspNetCore.Http;
 
 namespace AssessmentAPITesting.Test.Controllers
 {
@@ -40,7 +41,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<OkObjectResult>();
+            result.Result.Should().BeAssignableTo<OkObjectResult>().Subject.Value.Should().Be(columns);
             _columnInterface.Verify(c => c.GetAllColumnByType(dataType), Times.Once());
         }
         [Fact]
@@ -56,7 +57,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<NotFoundObjectResult>();
+            result.Result.Should().BeAssignableTo<NotFoundObjectResult>().Subject.Value.Should().Be($"No records with datatype {dataType}");
             _columnInterface.Verify(c => c.GetAllColumnByType(dataType), Times.Once());
         }
         [Fact]
@@ -64,7 +65,7 @@ namespace AssessmentAPITesting.Test.Controllers
         {
             //Arrange
             var dataType = _fixture.Create<string>();
-            _columnInterface.Setup(c => c.GetAllColumnByType(dataType)).Throws(new Exception());
+            _columnInterface.Setup(c => c.GetAllColumnByType(dataType)).Throws(new Exception("Error Occured"));
 
 
             //Act
@@ -73,7 +74,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Error Occured");
             _columnInterface.Verify(c => c.GetAllColumnByType(dataType), Times.Once());
         }
         //Tests for GetColumnByTableName function
@@ -83,6 +84,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Arrange
             var tableName = _fixture.Create<string>();
             var columns = _fixture.Create<IEnumerable<Aocolumn>>();
+            var returnColumn = new {TableName = tableName, columns};
             _columnInterface.Setup(c => c.GetAllColumnByTableName(tableName)).ReturnsAsync(columns);
 
 
@@ -92,7 +94,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<OkObjectResult>();
+            result.Result.Should().BeAssignableTo<OkObjectResult>().Subject.Value.Should().BeEquivalentTo(returnColumn, options => options.WithStrictOrdering());
             _columnInterface.Verify(c => c.GetAllColumnByTableName(tableName), Times.Once());
 
         }
@@ -110,7 +112,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<NotFoundObjectResult>();
+            result.Result.Should().BeAssignableTo<NotFoundObjectResult>().Subject.Value.Should().Be($"No Column with table name {tableName}");
             _columnInterface.Verify(c => c.GetAllColumnByTableName(tableName), Times.Once());
         }
 
@@ -120,7 +122,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Arrange
             var tableName = _fixture.Create<string>();
             var table = _fixture.Create<IEnumerable<Aotable>>();
-            _columnInterface.Setup(c => c.GetAllColumnByTableName(tableName)).Throws(new Exception());
+            _columnInterface.Setup(c => c.GetAllColumnByTableName(tableName)).Throws(new Exception("Error Occured"));
 
 
             //Act
@@ -129,7 +131,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Error Occured");
             _columnInterface.Verify(c => c.GetAllColumnByTableName(tableName), Times.Once());
         }
         [Fact]
@@ -147,7 +149,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Table name cannot be null or empty");
             _columnInterface.Verify(c => c.GetAllColumnByTableName(tableName), Times.Never());
         }
         //Tests for AddColumn 
@@ -166,7 +168,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<OkObjectResult>();
+            result.Result.Should().BeAssignableTo<OkObjectResult>().Subject.Value.Should().Be(columnReturn);
             _columnInterface.Verify(c => c.AddColumn(tableId, column), Times.Once());
         }
         
@@ -184,7 +186,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Column is empty in the request");
             _columnInterface.Verify(c => c.AddColumn(tableId,column), Times.Never());
 
         }
@@ -202,7 +204,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Cannot add column");
             _columnInterface.Verify(c => c.AddColumn(tableId,column), Times.Once());
 
         }
@@ -213,7 +215,7 @@ namespace AssessmentAPITesting.Test.Controllers
             var column = _fixture.Create<Aocolumn>();
             Guid tableId = _fixture.Create<Guid>();
             var tableReturn = _fixture.Create<Aotable>();
-            _columnInterface.Setup(c => c.AddColumn(tableId,column)).Throws(new Exception());
+            _columnInterface.Setup(c => c.AddColumn(tableId,column)).Throws(new Exception("Error Occured"));
 
             //Act
             var result = _columnController.AddColumn(tableId,column);
@@ -221,7 +223,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Error Occured");
             _columnInterface.Verify(c => c.AddColumn(tableId,column), Times.Once());
         }
         //Test for deleting column records
@@ -239,7 +241,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<OkObjectResult>();
+            result.Result.Should().BeAssignableTo<OkObjectResult>().Subject.Value.Should().Be(column);
             _columnInterface.Verify(c=>c.DeleteColumn(columnId), Times.Once());
         }
         [Fact]
@@ -256,7 +258,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Unable to delete the column");
             _columnInterface.Verify(c => c.DeleteColumn( columnId), Times.Once());
 
         }
@@ -266,7 +268,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Arrange
             var column = _fixture.Create<Aocolumn>();
             Guid columnId = _fixture.Create<Guid>();
-            _columnInterface.Setup(c => c.DeleteColumn(columnId)).Throws(new Exception());
+            _columnInterface.Setup(c => c.DeleteColumn(columnId)).Throws(new Exception("Error Occured"));
 
             //Act
             var result = _columnController.DeleteColumn(columnId);
@@ -274,7 +276,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Error Occured");
             _columnInterface.Verify(c => c.DeleteColumn(columnId), Times.Once());
         }
     }

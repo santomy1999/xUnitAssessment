@@ -37,7 +37,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<OkObjectResult>();
+            result.Result.Should().BeAssignableTo<OkObjectResult>().Subject.Value.Should().Be(tableReturn);
             _tableInterface.Verify(t => t.AddTable(table), Times.Once());
         }
         
@@ -54,7 +54,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Which.Value.Should().Be("Body doesn't contain any values");
             _tableInterface.Verify(t => t.AddTable(table), Times.Never());
 
         }
@@ -71,7 +71,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Error Occured while adding the table");
             _tableInterface.Verify(t => t.AddTable(table), Times.Once());
 
         }
@@ -81,7 +81,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Arrange
             var table = _fixture.Create<Aotable>();
             var tableReturn = _fixture.Create<Aotable>();
-            _tableInterface.Setup(c => c.AddTable(table)).Throws(new Exception());
+            _tableInterface.Setup(c => c.AddTable(table)).Throws(new Exception("Exception Occured"));
 
             //Act
             var result = _tableController.AddTable(table);
@@ -89,7 +89,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Subject.Value.Should().Be("Exception Occured");
             _tableInterface.Verify(t => t.AddTable(table), Times.Once());
         }
         //Edittable
@@ -108,7 +108,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<OkObjectResult>();
+            result.Result.Should().BeAssignableTo<OkObjectResult>().Subject.Value.Should().Be(existingTable);
             _tableInterface.Verify(t => t.EditTable(id,newTable), Times.Once());
         }
         [Fact]
@@ -118,7 +118,7 @@ namespace AssessmentAPITesting.Test.Controllers
             Guid id = _fixture.Create<Guid>();
             var newTable = _fixture.Create<Aotable>();
             var existingTable = _fixture.Create<Aotable>();
-            _tableInterface.Setup(c => c.EditTable(id, newTable)).Throws<Exception>();
+            _tableInterface.Setup(c => c.EditTable(id, newTable)).ThrowsAsync(new Exception("An exception occured"));
 
             //Act
             var result = _tableController.EditTable(id, newTable);
@@ -126,7 +126,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Which.Value.Should().Be("An exception occured");
             _tableInterface.Verify(t => t.EditTable(id, newTable), Times.Once());
         }
         [Fact]
@@ -144,7 +144,8 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<BadRequestObjectResult>();
+            result.Result.Should().BeAssignableTo<BadRequestObjectResult>().Which.Value.Should().Be("Null values present in the request");
+
             _tableInterface.Verify(t => t.EditTable(id, newTable), Times.Never());
         }
         [Fact]
@@ -162,7 +163,7 @@ namespace AssessmentAPITesting.Test.Controllers
             //Assert
             result.Should().NotBeNull();
             result.Should().BeAssignableTo<Task<IActionResult>>();
-            result.Result.Should().BeAssignableTo<NotFoundObjectResult>();
+            result.Result.Should().BeAssignableTo<NotFoundObjectResult>().Which.Value.Should().Be($"No table found with table id {id}");
             _tableInterface.Verify(t => t.EditTable(id, newTable), Times.Once());
         }
     }

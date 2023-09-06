@@ -36,7 +36,6 @@ namespace AssessmentAPITesting.Services
             {
                 return null;
             }
-            existingTable.Id = newtable.Id;
             existingTable.Name = newtable.Name;
             existingTable.Type = newtable.Type;
             existingTable.Description = newtable.Description;
